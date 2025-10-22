@@ -1,0 +1,238 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="D2Rbot">
+
+  <!--casterwiel hoog 13mm: 0.0013, diameter basis 36mm: 0.0036 (~ halve bol) -->
+
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+
+  <material name="orange">
+    <color rgba="0.94 0.13 0.0 1"/>
+  </material>
+
+  <material name="yellow">
+    <color rgba="0.92 0.94 0.17 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="paua-blue">
+    <color rgba="0.145 0.161 0.345 1"/>
+  </material>
+
+  <material name="shark-blue">
+    <color rgba="0.141 0.145 0.165 1"/>
+  </material>
+
+  <material name="dark_gray">
+    <color rgba="0.2 0.2 0.2 1"/>
+  </material>
+
+  <xacro:property name="chassis_z_offset" value="0.03125" />
+
+
+  <!-- Properties of each of the three plates -->
+  <xacro:property name="plate_diameter" value="0.160" />
+  <xacro:property name="plate_height" value="0.0025" />
+  <xacro:property name="plate_mass" value="0.392" />
+  <xacro:property name="distance_between_plates" value="${connector_height + plate_height}" />
+
+  <!-- Properties of the motors -->
+  <!-- Motor dimensions are including the bracket size -->
+  <xacro:property name="motor_length" value="0.065" />
+  <xacro:property name="motor_width" value="0.023" />
+  <xacro:property name="motor_height" value="0.038" />
+  <xacro:property name="motor_offset" value="0.0465" />
+  <xacro:property name="motorshaft_x_offset" value="0.0215" />
+  <xacro:property name="motorshaft_y_offset" value="${motor_width/2}" />
+  <xacro:property name="motorshaft_z_offset" value="-0.0190" />
+  <xacro:property name="motor_mass" value="0.029" />
+
+  <!--- Properties of the wheels -->
+  <xacro:property name="wheel_diameter" value="0.065" />
+  <xacro:property name="wheel_width" value="0.006" />
+  <xacro:property name="wheel_offset" value="0.007" />
+  <xacro:property name="wheel_mass" value="0.011" />
+
+  <!-- Properties of the vertical connection beams -->
+  <xacro:property name="connector_height" value="0.055" />
+  <xacro:property name="connector_width" value="0.008" />
+  <xacro:property name="connector_x_offset" value="0.060" />
+  <xacro:property name="connector_y_offset" value="0.040" />
+  <xacro:property name="connector_mass" value="0.001" />
+
+  <!-- Empty first link "world" -->
+  <link name="world" />
+
+  <!-- Base_link -->
+  <link name="base_link" />
+
+  <!-- Footprint_link -->
+  <link name="footprint_link" />
+
+  <!-- A simple fixed joint from our empty world link, to our base. -->
+  <!-- The base origin is not offset from the world origin. -->
+  <joint name="world_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <joint name="footprint_joint" type="fixed">
+    <origin xyz="0 0 ${-chassis_z_offset}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="footprint_link"/>
+  </joint>
+
+
+  <!-- Macro's -->
+  <xacro:include filename="$(find d2rbot_description)/urdf/default_inertial.urdf.xacro"/>
+
+  <!-- Start plate macro -->
+  <xacro:macro name="plate" params="prefix materialname parent parentdistance">
+
+    <link name="${prefix}plate_link">
+      <visual>
+        <geometry>
+          <cylinder length="${plate_height}" radius="${plate_diameter/2}"/>
+        </geometry>
+        <material name="${materialname}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="${plate_height}" radius="${plate_diameter/2}"/>
+        </geometry>
+      </collision>
+      <xacro:default_cylinder_inertial mass="${plate_mass}" radius="${plate_diameter/2}" height="${plate_height}" />
+    </link>
+    <joint name="${parent}_to_${prefix}plate_joint" type="fixed">
+      <parent link="${parent}_link"/>
+      <child link="${prefix}plate_link"/>
+      <origin xyz="0.0 0.0 ${parentdistance}"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Start motorblock macro -->
+  <xacro:macro name="motorblock" params="prefix reflect materialname parent">
+
+    <link name="${prefix}motorblock_link">
+      <visual>
+        <geometry>
+          <box size="${motor_length} ${motor_width} ${motor_height}"/>
+        </geometry>
+        <!--  <origin xyz="${motor_length/2} ${motor_width/2} ${motor_height/2}" rpy="0.0 0.0 0.0"/>  -->
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <material name="${materialname}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${motor_length} ${motor_width} ${motor_height}"/>
+        </geometry>
+      </collision>
+      <xacro:default_box_inertial mass="${motor_mass}" />
+    </link>
+    <joint name="${parent}_to_${prefix}motorblock_joint" type="fixed">
+      <parent link="${parent}_link"/>
+      <child link="${prefix}motorblock_link"/>
+      <origin xyz="0.0 ${reflect*(motor_offset - motor_width/2)} ${motor_height/2 + plate_height/2}"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Start wheel macro -->
+  <xacro:macro name="wheel" params="prefix reflect materialname parent">
+
+    <link name="${prefix}wheel_link">
+      <visual>
+        <geometry>
+          <cylinder length="${wheel_width}" radius="${wheel_diameter/2}" />
+        </geometry>
+        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0" />
+        <material name="${materialname}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="${wheel_width}" radius="${wheel_diameter/2}" />
+        </geometry>
+      </collision>
+      <xacro:default_cylinder_inertial mass="${wheel_mass}" radius="${wheel_diameter/2}" height="${wheel_width}" />
+    </link>
+    <joint name="${parent}_to_${prefix}wheel_joint" type="continuous">
+      <axis xyz="0 1 0" rpy="0 0 0" />
+      <parent link="${parent}_link" />
+      <child link="${prefix}wheel_link" />
+      <origin xyz="${motorshaft_x_offset} ${reflect*(motorshaft_y_offset + wheel_offset)} ${motorshaft_z_offset}" rpy="0 0 0" />
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Start connector macro -->
+  <!-- Note: connectors are for visual display only. -->
+  <!--       The three plates are directly joint to each other.-->
+  <xacro:macro name="connector" params="prefix materialname x_reflect y_reflect parent">
+
+    <link name="${prefix}_${parent}connector_link">
+      <visual>
+        <geometry>
+          <box size="${connector_width} ${connector_width} ${connector_height}"/>
+        </geometry>
+        <material name="${materialname}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${connector_width} ${connector_width} ${connector_height}"/>
+        </geometry>
+      </collision>
+      <xacro:default_box_inertial mass="${connector_mass}" />
+    </link>
+    <joint name="${parent}_to_${prefix}connector_joint" type="fixed">
+      <parent link="${parent}_link"/>
+      <child link="${prefix}_${parent}connector_link"/>
+      <origin xyz="${x_reflect * connector_x_offset} ${y_reflect * connector_y_offset} ${connector_height/2}"/>
+    </joint>
+  </xacro:macro>
+
+
+  <!-- Start of the actual robot model -->
+  <!-- Bottomplate -->
+  <xacro:plate prefix="bottom" materialname="black" parent="base" parentdistance="${chassis_z_offset}"/>
+
+  <!-- Middleplate -->
+  <xacro:plate prefix="middle" materialname="orange" parent="bottomplate" parentdistance="${distance_between_plates}"/>
+
+  <!-- Topplate -->
+  <xacro:plate prefix="top" materialname="orange" parent="middleplate" parentdistance="${distance_between_plates}"/>
+
+  <!-- Leftmotorblock -->
+  <xacro:motorblock prefix="left" reflect="1" materialname="yellow" parent="bottomplate" />
+  <!-- Leftwheel -->
+  <xacro:wheel prefix="left" reflect="1" materialname="dark_gray" parent="leftmotorblock" />
+
+  <!-- Rightmotorblock -->
+  <xacro:motorblock prefix="right" reflect="-1" materialname="yellow" parent="bottomplate" />
+  <!-- Rightwheel -->
+  <xacro:wheel prefix="right" reflect="-1" materialname="dark_gray" parent="rightmotorblock" />
+
+
+  <!-- Forwardleft connector bottomplate -->
+  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" materialname="paua-blue" parent="bottomplate" />
+  <!-- Forwardright connector bottomplate -->
+  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" materialname="paua-blue" parent="bottomplate" />
+  <!-- Backwardleft connector bottomplate -->
+  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" materialname="shark-blue" parent="bottomplate" />
+  <!-- Backwardright connector bottomplate -->
+  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" materialname="shark-blue" parent="bottomplate" />
+  <!-- Forwardleft connector niddleplate -->
+  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" materialname="paua-blue" parent="middleplate" />
+  <!-- Forwardright connector middleplate -->
+  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" materialname="paua-blue" parent="middleplate" />
+  <!-- Backwardleft connector middleplate -->
+  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" materialname="shark-blue" parent="middleplate" />
+  <!-- Backwardright connector middleplate -->
+  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" materialname="shark-blue" parent="middleplate" />
+
+</robot>
