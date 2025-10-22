@@ -15,6 +15,7 @@ Usage:
 """
 
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -32,13 +33,13 @@ def generate_launch_description():
     xacro_file = os.path.join(get_package_share_directory(pkg_name), urdf_subpath, urdf_filename)
     robot_description_raw = xacro.process_file(xacro_file).toxml()
 
-
-    # Configure the node's
+    #  Configure the node's
     node_robot_state_publisher_cmd = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description_raw}] # add other parameters here if required
+        parameters=[{'robot_description': robot_description_raw}]
+        # add other parameters here if required
     )
 
     node_joint_state_publisher_gui_cmd = Node(
