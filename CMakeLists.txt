@@ -15,7 +15,7 @@ find_package(urdf REQUIRED)
 find_package(xacro REQUIRED)
 
 install(
-  DIRECTORY urdf launch
+  DIRECTORY urdf rviz launch
   DESTINATION share/${PROJECT_NAME})
 
 
