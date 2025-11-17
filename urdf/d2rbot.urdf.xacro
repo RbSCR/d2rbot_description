@@ -19,10 +19,6 @@
     <color rgba="1 1 1 1"/>
   </material>
 
-  <material name="paua-blue">
-    <color rgba="0.145 0.161 0.345 1"/>
-  </material>
-
   <material name="shark-blue">
     <color rgba="0.141 0.145 0.165 1"/>
   </material>
@@ -32,7 +28,6 @@
   </material>
 
   <xacro:property name="chassis_z_offset" value="0.03125" />
-
 
   <!-- Properties of each of the three plates -->
   <xacro:property name="plate_diameter" value="0.160" />
@@ -45,7 +40,8 @@
   <xacro:property name="motor_length" value="0.065" />
   <xacro:property name="motor_width" value="0.023" />
   <xacro:property name="motor_height" value="0.038" />
-  <xacro:property name="motor_offset" value="0.0465" />
+  <xacro:property name="motor_x_offset" value="0.0215" />
+  <xacro:property name="motor_y_offset" value="0.0465" />
   <xacro:property name="motorshaft_x_offset" value="0.0215" />
   <xacro:property name="motorshaft_y_offset" value="${motor_width/2}" />
   <xacro:property name="motorshaft_z_offset" value="-0.0190" />
@@ -62,6 +58,8 @@
   <xacro:property name="connector_width" value="0.008" />
   <xacro:property name="connector_x_offset" value="0.060" />
   <xacro:property name="connector_y_offset" value="0.040" />
+  <xacro:property name="connector_y_narrow_compensation" value="0.020" />
+  <xacro:property name="connector_y_wide_compensation" value="0.000" />
   <xacro:property name="connector_mass" value="0.001" />
 
   <!-- Empty first link "world" -->
@@ -124,7 +122,6 @@
         <geometry>
           <box size="${motor_length} ${motor_width} ${motor_height}"/>
         </geometry>
-        <!--  <origin xyz="${motor_length/2} ${motor_width/2} ${motor_height/2}" rpy="0.0 0.0 0.0"/>  -->
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <material name="${materialname}"/>
       </visual>
@@ -138,7 +135,7 @@
     <joint name="${parent}_to_${prefix}motorblock_joint" type="fixed">
       <parent link="${parent}_link"/>
       <child link="${prefix}motorblock_link"/>
-      <origin xyz="0.0 ${reflect*(motor_offset - motor_width/2)} ${motor_height/2 + plate_height/2}"/>
+      <origin xyz="${-1*motor_x_offset} ${reflect*(motor_y_offset - motor_width/2)} ${motor_height/2 + plate_height/2}"/>
     </joint>
 
   </xacro:macro>
@@ -173,7 +170,7 @@
   <!-- Start connector macro -->
   <!-- Note: connectors are for visual display only. -->
   <!--       The three plates are directly joint to each other.-->
-  <xacro:macro name="connector" params="prefix materialname x_reflect y_reflect parent">
+  <xacro:macro name="connector" params="prefix materialname x_reflect y_reflect y_compensation parent">
 
     <link name="${prefix}_${parent}connector_link">
       <visual>
@@ -192,7 +189,7 @@
     <joint name="${parent}_to_${prefix}connector_joint" type="fixed">
       <parent link="${parent}_link"/>
       <child link="${prefix}_${parent}connector_link"/>
-      <origin xyz="${x_reflect * connector_x_offset} ${y_reflect * connector_y_offset} ${connector_height/2}"/>
+      <origin xyz="${x_reflect * connector_x_offset} ${y_reflect * (connector_y_offset - y_compensation)} ${connector_height/2}"/>
     </joint>
   </xacro:macro>
 
@@ -219,20 +216,20 @@
 
 
   <!-- Forwardleft connector bottomplate -->
-  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" materialname="paua-blue" parent="bottomplate" />
+  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" y_compensation="${connector_y_wide_compensation}" materialname="shark-blue" parent="bottomplate" />
   <!-- Forwardright connector bottomplate -->
-  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" materialname="paua-blue" parent="bottomplate" />
+  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" y_compensation="${connector_y_wide_compensation}" materialname="shark-blue" parent="bottomplate" />
   <!-- Backwardleft connector bottomplate -->
-  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" materialname="shark-blue" parent="bottomplate" />
+  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" y_compensation="${connector_y_narrow_compensation}" materialname="shark-blue" parent="bottomplate" />
   <!-- Backwardright connector bottomplate -->
-  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" materialname="shark-blue" parent="bottomplate" />
+  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" y_compensation="${connector_y_narrow_compensation}" materialname="shark-blue" parent="bottomplate" />
   <!-- Forwardleft connector niddleplate -->
-  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" materialname="paua-blue" parent="middleplate" />
+  <xacro:connector prefix="forwardleft" x_reflect="1" y_reflect="1" y_compensation="${connector_y_narrow_compensation}" materialname="shark-blue" parent="middleplate" />
   <!-- Forwardright connector middleplate -->
-  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" materialname="paua-blue" parent="middleplate" />
+  <xacro:connector prefix="forwardright" x_reflect="1" y_reflect="-1" y_compensation="${connector_y_narrow_compensation}" materialname="shark-blue" parent="middleplate" />
   <!-- Backwardleft connector middleplate -->
-  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" materialname="shark-blue" parent="middleplate" />
+  <xacro:connector prefix="backwardleft" x_reflect="-1" y_reflect="1" y_compensation="${connector_y_wide_compensation}" materialname="shark-blue" parent="middleplate" />
   <!-- Backwardright connector middleplate -->
-  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" materialname="shark-blue" parent="middleplate" />
+  <xacro:connector prefix="backwardright" x_reflect="-1" y_reflect="-1" y_compensation="${connector_y_wide_compensation}" materialname="shark-blue" parent="middleplate" />
 
 </robot>
