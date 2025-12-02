@@ -32,7 +32,8 @@
   <!-- Properties of each of the three plates -->
   <xacro:property name="plate_diameter" value="0.160" />
   <xacro:property name="plate_height" value="0.0025" />
-  <xacro:property name="plate_mass" value="0.392" />
+  <xacro:property name="plate_mass" value="0.394" />
+  <xacro:property name="bottomplate_mass" value="0.350" />
   <xacro:property name="distance_between_plates" value="${connector_height + plate_height}" />
 
   <!-- Properties of the motors -->
@@ -45,13 +46,13 @@
   <xacro:property name="motorshaft_x_offset" value="0.0215" />
   <xacro:property name="motorshaft_y_offset" value="${motor_width/2}" />
   <xacro:property name="motorshaft_z_offset" value="-0.0190" />
-  <xacro:property name="motor_mass" value="0.029" />
+  <xacro:property name="motor_mass" value="0.037" />
 
   <!--- Properties of the wheels -->
   <xacro:property name="wheel_diameter" value="0.065" />
   <xacro:property name="wheel_width" value="0.006" />
   <xacro:property name="wheel_offset" value="0.007" />
-  <xacro:property name="wheel_mass" value="0.011" />
+  <xacro:property name="wheel_mass" value="0.012" />
 
   <!-- Properties of the vertical connection beams -->
   <xacro:property name="connector_height" value="0.055" />
@@ -59,7 +60,7 @@
   <xacro:property name="connector_x_offset" value="0.060" />
   <xacro:property name="connector_y_offset" value="0.040" />
   <xacro:property name="connector_y_narrow_shift" value="-0.020" />
-  <xacro:property name="connector_mass" value="0.001" />
+  <xacro:property name="connector_mass" value="0.002" />
 
   <!-- Empty first link "world" -->
   <link name="world" />
@@ -89,7 +90,7 @@
   <xacro:include filename="$(find d2rbot_description)/urdf/default_inertial.urdf.xacro"/>
 
   <!-- Start plate macro -->
-  <xacro:macro name="plate" params="prefix materialname parent parentdistance">
+  <xacro:macro name="plate" params="prefix materialname mass parent parentdistance">
 
     <link name="${prefix}plate_link">
       <visual>
@@ -103,7 +104,7 @@
           <cylinder length="${plate_height}" radius="${plate_diameter/2}"/>
         </geometry>
       </collision>
-      <xacro:default_cylinder_inertial mass="${plate_mass}" radius="${plate_diameter/2}" height="${plate_height}" />
+      <xacro:default_cylinder_inertial mass="${mass}" radius="${plate_diameter/2}" height="${plate_height}" />
     </link>
     <joint name="${parent}_to_${prefix}plate_joint" type="fixed">
       <parent link="${parent}_link"/>
@@ -195,13 +196,13 @@
 
   <!-- Start of the actual robot model -->
   <!-- Bottomplate -->
-  <xacro:plate prefix="bottom" materialname="black" parent="base" parentdistance="${chassis_z_offset}"/>
+  <xacro:plate prefix="bottom" materialname="black" mass="${bottomplate_mass}" parent="base" parentdistance="${chassis_z_offset}"/>
 
   <!-- Middleplate -->
-  <xacro:plate prefix="middle" materialname="orange" parent="bottomplate" parentdistance="${distance_between_plates}"/>
+  <xacro:plate prefix="middle" materialname="orange" mass="${plate_mass}" parent="bottomplate" parentdistance="${distance_between_plates}"/>
 
   <!-- Topplate -->
-  <xacro:plate prefix="top" materialname="orange" parent="middleplate" parentdistance="${distance_between_plates}"/>
+  <xacro:plate prefix="top" materialname="orange" mass="${plate_mass}" parent="middleplate" parentdistance="${distance_between_plates}"/>
 
   <!-- Leftmotorblock -->
   <xacro:motorblock prefix="left" reflect="1" materialname="yellow" parent="bottomplate" />
