@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+  <!-- TODO  check if works as an include -->
+
+  <material name="C1_black">
+    <color rgba="0 0 0 1"/>
+  </material>
+
+
+  <!-- Properties C1 -->
+  <xacro:property name="C1_box_length" value="0.0550" />
+  <xacro:property name="C1_box_width" value="0.0550" />
+  <xacro:property name="C1_box_height" value="0.0253" />
+  <xacro:property name="C1_cylinder_diameter" value="0.0520" />
+  <xacro:property name="C1_cylinder_heigth" value="0.0182" />
+  <xacro:property name="C1_mass" value="0.096" />
+
+  <!-- Empty first link "world" -->
+  <link name="world" />
+
+  <!-- Base_link -->
+  <link name="base_link" />
+
+  <!-- Footprint_link -->
+  <link name="footprint_link" />
+
+  <!-- A simple fixed joint from our empty world link, to our base. -->
+  <!-- The base origin is not offset from the world origin. -->
+  <joint name="world_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <joint name="footprint_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="footprint_link"/>
+  </joint>
+
+
+  <!-- Macro's -->
+  <xacro:include filename="$(find d2rbot_description)/urdf/default_inertial.urdf.xacro"/>
+
+  <!-- C1 lidar macro -->
+  <xacro:macro name="C1-lidar" params="prefix materialname parent">
+
+    <link name="${prefix}_link">
+
+      <visual>
+        <geometry>
+          <box size="${C1_box_length} ${C1_box_width} ${C1_box_height}"/>
+        </geometry>
+        <origin xyz="0.0 0.0 ${C1_box_height/2}" rpy="0.0 0.0 0.0"/>
+        <material name="${materialname}"/>
+      </visual>
+      <visual>
+        <origin xyz="0 0 ${C1_box_height + (C1_cylinder_heigth/2)}" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="${C1_cylinder_heigth}" radius="${C1_cylinder_diameter/2}"/>
+        </geometry>
+        <material name="${materialname}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${C1_box_length} ${C1_box_width} ${C1_box_height + C1_cylinder_heigth}"/>
+        </geometry>
+      </collision>
+      <xacro:default_box_inertial mass="${C1_mass}" />
+    </link>
+    <joint name="${parent}_to_${prefix}_joint" type="fixed">
+      <parent link="${parent}_link"/>
+      <child link="${prefix}_link"/>
+      <origin xyz="0.0 0.0 0.0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Start of the actual C1 lidar -->
+  <xacro:C1-lidar prefix="unique" materialname="C1_black" parent="base"/>
+
+</robot>
